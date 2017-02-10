@@ -67,7 +67,6 @@ def main():
     parser_svr.add_argument('--stderr', '-e', help='stderr')
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
     parser_svr.add_argument('--dryrun', action='store_true', help='dryrun')
-    parser_svr.add_argument('--nompirun', action='store_true', help='no use of mpirun for clients') 
 
     parser_cmd = argparse.ArgumentParser(prog='APP_COMMAND', add_help=False)
     parser_cmd.add_argument('--np', '-n', help='num. of processes', type=int, default=1)
@@ -75,6 +74,7 @@ def main():
     parser_cmd.add_argument('--stdout', '-o', help='stdout')
     parser_cmd.add_argument('--stderr', '-e', help='stderr')
     parser_cmd.add_argument('--oe', help='merging stdout and stderr')
+    parser_cmd.add_argument('--nompi', action='store_true', help='no mpirun')
 
     cmds = cmdlist(sys.argv[1:])
     if len(cmds) < 2:
@@ -134,7 +134,7 @@ def main():
 
     # Run client
     for a in args_cmd_list:
-        if not args.nompirun:
+        if not a.nompi:
             cl_cmd = ' '.join(['%(mpirun)s -n %(np)d' % {'mpirun':args.mpirun, 'np':a.np}, ' '.join(a.UNKNOWN), ' '.join(a.CMDS)])
         else:
             cl_cmd = ' '.join([' '.join(a.CMDS)])
