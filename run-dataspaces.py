@@ -69,9 +69,10 @@ def main():
     parser_svr.add_argument('--stdout', '-o', help='stdout')
     parser_svr.add_argument('--stderr', '-e', help='stderr')
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
-    parser_svr.add_argument('--dryrun', action='store_true', help='dryrun')
-    parser_svr.add_argument('--noserver', action='store_true', help='no server')
+    parser_svr.add_argument('--dryrun', help='dryrun', action='store_true')
+    parser_svr.add_argument('--noserver', help='no server', action='store_true')
     parser_svr.add_argument('--sleep', help='sleep time between executions', type=int, default=5)
+    parser_svr.add_argument('--serial', help='serial execution', action='store_true')
 
     parser_cmd = argparse.ArgumentParser(prog='APP_COMMAND', add_help=False)
     parser_cmd.add_argument('--np', '-n', help='num. of processes', type=int, default=1)
@@ -80,6 +81,7 @@ def main():
     parser_cmd.add_argument('--stderr', '-e', help='stderr')
     parser_cmd.add_argument('--oe', help='merging stdout and stderr')
     parser_cmd.add_argument('--nompi', action='store_true', help='no mpirun')
+    parser_cmd.add_argument('--cwd', help='work directory')
 
     cmds = cmdlist(sys.argv[1:])
     if len(cmds) < 2:
@@ -101,7 +103,7 @@ def main():
         nclient = args.nclient
 
     # Check config file and remove previous conf file
-    if not os.path.exists('dataspaces.conf'):
+    if not args.noserver and not os.path.exists('dataspaces.conf'):
         logging.error('Error: no config file (dataspaces.conf). Exit.')
         sys.exit()
 
@@ -149,15 +151,20 @@ def main():
 
         logging.debug('CMD: %s' % cl_cmd)
         if not args.dryrun:
+            if args.serial and len(plist)>0:
+                p = plist.pop()
+                logging.debug('Waiting PID: %r' % p.pid)
+                p.wait()
+
             f_stdout, f_stderr = getstds(a)
             p1 = subprocess.Popen(cl_cmd.split(), env=env,
                     stdout=f_stdout, stderr=f_stderr,
-                    close_fds=True)
+                    close_fds=True, cwd=a.cwd)
             logging.debug('PID: %r (%r)' % (p1.pid, cl_cmd))
             plist.append(p1)
             time.sleep(args.sleep)
 
-    if not args.dryrun:
+    if not args.dryrun and len(plist)>0:
         for p in plist[::-1]:
             logging.debug('Waiting PID: %r' % p.pid)
             p.wait()
