@@ -113,8 +113,9 @@ def main():
     # Run server
     ds_cmd = '%(mpicmd)s -n %(nserver)d dataspaces_server -s%(nserver)d -c%(nclient)d' % \
         {'mpicmd':args.mpicmd, 'nserver':args.nserver, 'nclient':nclient}
+    if not args.noserver:
+        logging.debug('CMD: %s' % ds_cmd)
 
-    logging.debug('CMD: %s' % ds_cmd)
     plist = list()
     if not args.dryrun and not args.noserver:
         f_stdout, f_stderr = getstds(args)
