@@ -13,7 +13,7 @@ More details of options will be printed with `-h` option:
 $ run-staging.py -h
 ```
 
-A Adios staging example is available at https://github.com/jychoi-hpc/test-adios-staging
+An Adios staging example is available at https://github.com/jychoi-hpc/test-adios-staging
 
 Example
 -------
