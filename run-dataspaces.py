@@ -81,6 +81,7 @@ def main():
     parser_cmd.add_argument('--stderr', '-e', help='stderr')
     parser_cmd.add_argument('--oe', help='merging stdout and stderr')
     parser_cmd.add_argument('--nompi', action='store_true', help='no mpirun')
+    parser_cmd.add_argument('--opt', nargs='*', help='options for mpirun', default=[])
     parser_cmd.add_argument('--cwd', help='work directory')
 
     cmds = cmdlist(sys.argv[1:])
@@ -145,7 +146,7 @@ def main():
     # Run client
     for a in args_cmd_list:
         if not a.nompi:
-            cl_cmd = ' '.join(['%(mpirun)s -n %(np)d' % {'mpirun':args.mpirun, 'np':a.np}, ' '.join(a.UNKNOWN), ' '.join(a.CMDS)])
+            cl_cmd = ' '.join(['%(mpirun)s -n %(np)d %(opt)s' % {'mpirun':args.mpirun, 'np':a.np, 'opt':' '.join(a.opt)}, ' '.join(a.UNKNOWN), ' '.join(a.CMDS)])
         else:
             cl_cmd = ' '.join([' '.join(a.CMDS)])
 
