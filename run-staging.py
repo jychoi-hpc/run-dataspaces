@@ -65,7 +65,7 @@ def main():
     parser_svr = argparse.ArgumentParser(prog='SERVER_COMMAND', add_help=False)
     parser_svr.add_argument('--nserver', '-s', help='num. of servers', type=int, default=1)
     parser_svr.add_argument('--nclient', '-c', help='num. of clients (will overwrite estimated number)', type=int, default=0)
-    parser_svr.add_argument('--mpirun', help='mpirun command', default='mpirun')
+    parser_svr.add_argument('--mpicmd', help='mpi command', default='mpirun')
     parser_svr.add_argument('--stdout', '-o', help='stdout')
     parser_svr.add_argument('--stderr', '-e', help='stderr')
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
@@ -80,8 +80,8 @@ def main():
     parser_cmd.add_argument('--stdout', '-o', help='stdout')
     parser_cmd.add_argument('--stderr', '-e', help='stderr')
     parser_cmd.add_argument('--oe', help='merging stdout and stderr')
-    parser_cmd.add_argument('--nompi', action='store_true', help='no mpirun')
-    parser_cmd.add_argument('--opt', nargs='*', help='options for mpirun', default=[])
+    parser_cmd.add_argument('--nompi', action='store_true', help='no mpi')
+    parser_cmd.add_argument('--opt', nargs='*', help='options for mpi command', default=[])
     parser_cmd.add_argument('--cwd', help='work directory')
 
     cmds = cmdlist(sys.argv[1:])
@@ -111,8 +111,8 @@ def main():
     os.remove('conf') if os.path.isfile('conf') else None
 
     # Run server
-    ds_cmd = '%(mpirun)s -n %(nserver)d dataspaces_server -s%(nserver)d -c%(nclient)d' % \
-        {'mpirun':args.mpirun, 'nserver':args.nserver, 'nclient':nclient}
+    ds_cmd = '%(mpicmd)s -n %(nserver)d dataspaces_server -s%(nserver)d -c%(nclient)d' % \
+        {'mpicmd':args.mpicmd, 'nserver':args.nserver, 'nclient':nclient}
 
     logging.debug('CMD: %s' % ds_cmd)
     plist = list()
@@ -146,7 +146,7 @@ def main():
     # Run client
     for a in args_cmd_list:
         if not a.nompi:
-            cl_cmd = ' '.join(['%(mpirun)s -n %(np)d %(opt)s' % {'mpirun':args.mpirun, 'np':a.np, 'opt':' '.join(a.opt)}, ' '.join(a.UNKNOWN), ' '.join(a.CMDS)])
+            cl_cmd = ' '.join(['%(mpicmd)s -n %(np)d %(opt)s' % {'mpicmd':args.mpicmd, 'np':a.np, 'opt':' '.join(a.opt)}, ' '.join(a.UNKNOWN), ' '.join(a.CMDS)])
         else:
             cl_cmd = ' '.join([' '.join(a.CMDS)])
 
