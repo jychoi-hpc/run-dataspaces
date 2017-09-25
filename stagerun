@@ -4,13 +4,13 @@
 This is a wrapper command for running dataspaces_server with multiple applications.
 
 The general form of this comand is as follows:
-$ run-staging.py SERVER_COMMAND [ : APPLICATION_COMMAND ] *
+$ stagerun.py SERVER_COMMAND [ : APPLICATION_COMMAND ] *
 
 More details of options will be printed with '-h' option:
-$ run-staging.py -h
+$ stagerun.py -h
 
 For the most recent code, please check out here:
-https://github.com/jychoi-hpc/run-staging
+https://github.com/jychoi-hpc/stagerun
 '''
 
 import sys
@@ -51,7 +51,7 @@ def getstds(args):
 def main():
     logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
     def usage():
-        print ('USAGE: run-staging.py <SERVER_COMMAND> [ : <APP_COMMAND> ]*')
+        print ('USAGE: stagerun.py <SERVER_COMMAND> [ : <APP_COMMAND> ]*')
         print ('====================')
         parser_svr.print_help()
         print ('--------------------')
@@ -66,6 +66,7 @@ def main():
     parser_svr.add_argument('--nserver', '-s', help='num. of servers', type=int, default=1)
     parser_svr.add_argument('--nclient', '-c', help='num. of clients (will overwrite estimated number)', type=int, default=0)
     parser_svr.add_argument('--mpicmd', help='mpi command', default='mpirun')
+    parser_svr.add_argument('--opt', nargs='*', help='options for mpi command', default=[])
     parser_svr.add_argument('--stdout', '-o', help='stdout')
     parser_svr.add_argument('--stderr', '-e', help='stderr')
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
@@ -111,8 +112,8 @@ def main():
     os.remove('conf') if os.path.isfile('conf') else None
 
     # Run server
-    ds_cmd = '%(mpicmd)s -n %(nserver)d dataspaces_server -s%(nserver)d -c%(nclient)d' % \
-        {'mpicmd':args.mpicmd, 'nserver':args.nserver, 'nclient':nclient}
+    ds_cmd = '%(mpicmd)s -n %(nserver)d %(opt)s dataspaces_server -s%(nserver)d -c%(nclient)d' % \
+        {'mpicmd':args.mpicmd, 'opt':' '.join(args.opt), 'nserver':args.nserver, 'nclient':nclient}
     if not args.noserver:
         logging.debug('CMD: %s' % ds_cmd)
 
