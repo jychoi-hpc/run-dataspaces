@@ -19,6 +19,7 @@ import subprocess
 import os
 import time
 import logging
+import copy
 
 def cmdlist(argv):
     '''
@@ -66,7 +67,7 @@ def main():
     parser_svr.add_argument('--nserver', '-s', help='num. of servers', type=int, default=1)
     parser_svr.add_argument('--nclient', '-c', help='num. of clients (will overwrite estimated number)', type=int, default=0)
     parser_svr.add_argument('--mpicmd', help='mpi command', default='mpirun')
-    parser_svr.add_argument('--opt', nargs='*', help='options for mpi command', default=[])
+    parser_svr.add_argument('--opt', help='options for mpi command', action='append', default=[])
     parser_svr.add_argument('--stdout', '-o', help='stdout')
     parser_svr.add_argument('--stderr', '-e', help='stderr')
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
@@ -82,8 +83,9 @@ def main():
     parser_cmd.add_argument('--stderr', '-e', help='stderr')
     parser_cmd.add_argument('--oe', help='merging stdout and stderr')
     parser_cmd.add_argument('--nompi', action='store_true', help='no mpi')
-    parser_cmd.add_argument('--opt', nargs='*', help='options for mpi command', default=[])
+    parser_cmd.add_argument('--opt', help='options for mpi command', action='append', default=[])
     parser_cmd.add_argument('--cwd', help='work directory')
+    parser_cmd.add_argument('--env', '-x', help='env key=value', action='append', default=[])
 
     cmds = cmdlist(sys.argv[1:])
     if len(cmds) < 2:
@@ -159,8 +161,13 @@ def main():
                 logging.debug('Waiting PID: %r' % p.pid)
                 p.wait()
 
+            cl_env = copy.deepcopy(env)
+            for kv in a.env:
+                k, v = kv.split('=')
+                cl_env[k] = v
+
             f_stdout, f_stderr = getstds(a)
-            p1 = subprocess.Popen(cl_cmd.split(), env=env,
+            p1 = subprocess.Popen(cl_cmd.split(), env=cl_env,
                     stdout=f_stdout, stderr=f_stderr,
                     close_fds=True, cwd=a.cwd)
             logging.debug('PID: %r (%r)' % (p1.pid, cl_cmd))
