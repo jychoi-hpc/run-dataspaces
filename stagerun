@@ -20,6 +20,20 @@ import os
 import time
 import logging
 import copy
+from threading  import Thread
+from Queue import Queue, Empty
+
+queue = Queue()
+
+def dequeue_output():
+    while True:
+        print queue.get()
+
+def enqueue_output(out, prefix):
+    while True:
+        output = out.readline()
+        if output:
+            queue.put(prefix + ':' + output.rstrip())
 
 def cmdlist(argv):
     '''
@@ -167,15 +181,22 @@ def main():
                 cl_env[k] = v
 
             f_stdout, f_stderr = getstds(a)
-            p1 = subprocess.Popen(cl_cmd.split(), env=cl_env,
-                    stdout=f_stdout, stderr=f_stderr,
+            p = subprocess.Popen(cl_cmd.split(), env=cl_env,
+                    #stdout=f_stdout, stderr=f_stderr,
+                    stdout=subprocess.PIPE, 
                     close_fds=True, cwd=a.cwd)
-            logging.debug('PID: %r (%r)' % (p1.pid, cl_cmd))
-            plist.append(p1)
-            time.sleep(args.sleep)
+            logging.debug('PID: %r (%r)' % (p.pid, cl_cmd))
+            plist.append(p)
+            t = Thread(target=enqueue_output, args=(p.stdout, '[%d]'%p.pid))
+            t.daemon = True
+            t.start()
+            #time.sleep(args.sleep)
 
     if not args.dryrun and len(plist)>0:
-        for p in plist[::-1]:
+        t = Thread(target=dequeue_output)
+        t.daemon = True
+        t.start()
+        for p in plist:
             logging.debug('Waiting PID: %r' % p.pid)
             p.wait()
     logging.info('Done.')
