@@ -1,7 +1,10 @@
 Wrapper command for running staging application
 ===============================================
 
-This is a wrapper command written in Python for running multiple applications with Adios staging methods (FlexPath, DATASPACES, DIMES, etc). By default, using DATASPACES is assumed. However, it supports FlexPath and others.
+This is a wrapper command written in Python for running multiple
+applications with Adios staging methods (FlexPath, DATASPACES, DIMES,
+etc). By default, using DATASPACES is assumed. However, it supports
+FlexPath and others.
 
 The general form of this comand is as follows:
 ```
@@ -13,7 +16,19 @@ More details of options will be printed with `-h` option:
 $ stagerun -h
 ```
 
-An Adios staging example is available at https://github.com/jychoi-hpc/test-adios-staging
+An Adios staging example is available at
+https://github.com/jychoi-hpc/test-adios-staging
+
+Installation
+------------
+
+`stagerun` is a single python file. You can simply download as follows:
+
+```
+$ wget https://raw.githubusercontent.com/jychoi-hpc/stagerun/master/stagerun && chmod +x stagerun
+```
+
+Or, you can clone this repository.
 
 Example
 -------
