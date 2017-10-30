@@ -30,10 +30,11 @@ def dequeue_output():
         print queue.get()
 
 def enqueue_output(out, prefix):
-    while True:
-        output = out.readline()
-        if output:
-            queue.put(prefix + ':' + output.rstrip())
+    if out is not None:
+        while True:
+            output = out.readline()
+            if output:
+                queue.put(prefix + output.rstrip())
 
 def cmdlist(argv):
     '''
@@ -55,8 +56,8 @@ def cmdlist(argv):
 
 def getstds(args):
     if args.oe is None:
-        f_stdout = open(args.stdout, 'w') if args.stdout is not None else None
-        f_stderr = open(args.stderr, 'w') if args.stdout is not None else None
+        f_stdout = open(args.stdout, 'w') if args.stdout is not None else subprocess.PIPE
+        f_stderr = open(args.stderr, 'w') if args.stderr is not None else subprocess.PIPE
     else:
         f = open(args.oe, 'w')
         f_stdout = f
@@ -101,6 +102,7 @@ def main():
     parser_cmd.add_argument('--cwd', help='work directory')
     parser_cmd.add_argument('--env', '-x', help='env key=value', action='append', default=[])
     parser_cmd.add_argument('--norun', help='no run', action='store_true')
+    parser_cmd.add_argument('--prefix', help='stdout prefix')
 
     cmds = cmdlist(sys.argv[1:])
     if len(cmds) < 2:
@@ -183,14 +185,18 @@ def main():
 
             f_stdout, f_stderr = getstds(a)
             p = subprocess.Popen(cl_cmd.split(), env=cl_env,
-                    #stdout=f_stdout, stderr=f_stderr,
-                    stdout=subprocess.PIPE, 
+                    stdout=f_stdout, stderr=f_stderr,
                     close_fds=True, cwd=a.cwd)
             logging.debug('PID: %r (%r)' % (p.pid, cl_cmd))
             plist.append(p)
-            t = Thread(target=enqueue_output, args=(p.stdout, '[%d]'%p.pid))
-            t.daemon = True
-            t.start()
+
+            prefix = '[%d]:'%p.pid if a.prefix is None else a.prefix
+            t0 = Thread(target=enqueue_output, args=(p.stdout, prefix))
+            t0.daemon = True
+            t0.start()
+            t1 = Thread(target=enqueue_output, args=(p.stderr, prefix))
+            t1.daemon = True
+            t1.start()
             #time.sleep(args.sleep)
 
     if not args.dryrun and len(plist)>0:
