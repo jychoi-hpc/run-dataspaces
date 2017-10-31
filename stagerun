@@ -36,6 +36,11 @@ def enqueue_output(out, prefix):
             if output:
                 queue.put(prefix + output.rstrip())
 
+def runthread(out, prefix):
+    t = Thread(target=enqueue_output, args=(out, prefix))
+    t.daemon = True
+    t.start()
+
 def cmdlist(argv):
     '''
     return list of list
@@ -139,11 +144,15 @@ def main():
     plist = list()
     if not args.dryrun and not args.noserver:
         f_stdout, f_stderr = getstds(args)
-        p0 = subprocess.Popen(ds_cmd.split(),
+        p = subprocess.Popen(ds_cmd.split(),
                 stdout=f_stdout, stderr=f_stderr,
                 close_fds=True)
-        logging.debug('PID: %r (%r)' % (p0.pid, ds_cmd))
-        plist.append(p0)
+        logging.debug('PID: %r (%r)' % (p.pid, ds_cmd))
+        plist.append(p)
+
+        prefix = '[%d]:'%p.pid
+        runthread(p.stdout, prefix)
+        runthread(p.stderr, prefix)
 
     env = os.environ.copy()
     if not args.dryrun and not args.noserver:
@@ -191,13 +200,9 @@ def main():
             plist.append(p)
 
             prefix = '[%d]:'%p.pid if a.prefix is None else a.prefix
-            t0 = Thread(target=enqueue_output, args=(p.stdout, prefix))
-            t0.daemon = True
-            t0.start()
-            t1 = Thread(target=enqueue_output, args=(p.stderr, prefix))
-            t1.daemon = True
-            t1.start()
-            #time.sleep(args.sleep)
+            runthread(p.stdout, prefix)
+            runthread(p.stderr, prefix)
+            time.sleep(args.sleep)
 
     if not args.dryrun and len(plist)>0:
         t = Thread(target=dequeue_output)
