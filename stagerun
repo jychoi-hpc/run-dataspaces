@@ -24,6 +24,7 @@ from threading  import Thread
 from Queue import Queue, Empty
 
 queue = Queue()
+run_thread = False
 
 def dequeue_output():
     while True:
@@ -38,6 +39,13 @@ def enqueue_output(out, prefix):
                 queue.put(prefix + output.rstrip())
 
 def runthread(out, prefix):
+    global run_thread
+    if run_thread is False:
+        t = Thread(target=dequeue_output)
+        t.daemon = True
+        t.start()
+        run_thread = True
+        
     t = Thread(target=enqueue_output, args=(out, prefix))
     t.daemon = True
     t.start()
@@ -206,9 +214,6 @@ def main():
             time.sleep(args.sleep)
 
     if not args.dryrun and len(plist)>0:
-        t = Thread(target=dequeue_output)
-        t.daemon = True
-        t.start()
         for p in plist:
             logging.debug('Waiting PID: %r' % p.pid)
             p.wait()
