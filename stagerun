@@ -28,6 +28,7 @@ queue = Queue()
 def dequeue_output():
     while True:
         print queue.get()
+        sys.stdout.flush()
 
 def enqueue_output(out, prefix):
     if out is not None:
@@ -93,7 +94,7 @@ def main():
     parser_svr.add_argument('--oe', help='merging stdout and stderr')
     parser_svr.add_argument('--dryrun', help='dryrun', action='store_true')
     parser_svr.add_argument('--noserver', help='no server', action='store_true')
-    parser_svr.add_argument('--sleep', help='sleep time between executions', type=int, default=5)
+    parser_svr.add_argument('--sleep', help='sleep time between executions', type=int, default=3)
     parser_svr.add_argument('--serial', help='serial execution', action='store_true')
 
     parser_cmd = argparse.ArgumentParser(prog='APP_COMMAND', add_help=False)
