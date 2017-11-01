@@ -131,7 +131,7 @@ def main():
     for cmd in cmds[1:]:
         args_cmd, _unknown = parser_cmd.parse_known_args(cmd)
         setattr(args_cmd, 'UNKNOWN', _unknown)
-        nclient += args_cmd.np
+        nclient += args_cmd.np if not args_cmd.norun else 0
         args_cmd_list.append(args_cmd)
 
     if args.nclient > 0:
