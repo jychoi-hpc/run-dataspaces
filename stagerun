@@ -202,7 +202,9 @@ def main():
         else:
             cl_cmd = ' '.join([' '.join(a.CMDS)])
 
-        logging.debug('CMD: %s' % cl_cmd)
+        if not a.norun:
+            logging.debug('CMD: %s' % cl_cmd)
+        
         if not args.dryrun and not a.norun:
             if args.serial and len(plist)>0:
                 p = plist.pop()
