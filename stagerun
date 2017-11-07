@@ -24,29 +24,35 @@ from threading  import Thread
 from Queue import Queue, Empty
 
 queue = Queue()
-run_thread = False
+use_thread = False
+use_color = False
+use_tag = False
 
-def dequeue_output():
+def dequeue_output(color=False):
     while True:
-        print queue.get()
+        stdnum, out = queue.get()
+        if stdnum==2 and use_color:
+            print '\x1b[6;37;41m'+out+'\x1b[0m'
+        else:
+            print out
         sys.stdout.flush()
 
-def enqueue_output(out, prefix):
+def enqueue_output(stdnum, out, tag):
     if out is not None:
         while True:
-            output = out.readline()
+            output = out.readline().rstrip()
             if output:
-                queue.put(prefix + output.rstrip())
+                queue.put((stdnum, tag + output.rstrip()))
 
-def runthread(out, prefix):
-    global run_thread
-    if run_thread is False:
+def runthread(stdnum, out, tag):
+    global use_thread
+    if use_thread is False:
         t = Thread(target=dequeue_output)
         t.daemon = True
         t.start()
-        run_thread = True
+        use_thread = True
         
-    t = Thread(target=enqueue_output, args=(out, prefix))
+    t = Thread(target=enqueue_output, args=(stdnum, out, tag))
     t.daemon = True
     t.start()
 
@@ -104,6 +110,8 @@ def main():
     parser_svr.add_argument('--noserver', help='no server', action='store_true')
     parser_svr.add_argument('--sleep', help='sleep time between executions', type=int, default=3)
     parser_svr.add_argument('--serial', help='serial execution', action='store_true')
+    parser_svr.add_argument('--usecolor', help='use color', action='store_true')
+    parser_svr.add_argument('--tag-output', help='tag output', action='store_true')
 
     parser_cmd = argparse.ArgumentParser(prog='APP_COMMAND', add_help=False)
     parser_cmd.add_argument('--np', '-n', help='num. of processes', type=int, default=1)
@@ -116,7 +124,7 @@ def main():
     parser_cmd.add_argument('--cwd', help='work directory')
     parser_cmd.add_argument('--env', '-x', help='env key=value', action='append', default=[])
     parser_cmd.add_argument('--norun', help='no run', action='store_true')
-    parser_cmd.add_argument('--prefix', help='stdout prefix')
+    parser_cmd.add_argument('--tag', help='stdout tag')
 
     cmds = cmdlist(sys.argv[1:])
     if len(cmds) < 2:
@@ -126,6 +134,11 @@ def main():
     nserver = args.nserver
     if len(_unknown) > 0:
         usage()
+
+    global use_color
+    global use_tag
+    use_color = args.usecolor
+    use_tag = args.tag_output
 
     args_cmd_list = list()
     for cmd in cmds[1:]:
@@ -159,9 +172,9 @@ def main():
         logging.debug('PID: %r (%r)' % (p.pid, ds_cmd))
         plist.append(p)
 
-        prefix = '[%d]:'%p.pid
-        runthread(p.stdout, prefix)
-        runthread(p.stderr, prefix)
+        tag = '[%d]:'%p.pid
+        runthread(1, p.stdout, tag)
+        runthread(2, p.stderr, tag)
 
     env = os.environ.copy()
     if not args.dryrun and not args.noserver:
@@ -208,9 +221,9 @@ def main():
             logging.debug('PID: %r (%r)' % (p.pid, cl_cmd))
             plist.append(p)
 
-            prefix = '[%d]:'%p.pid if a.prefix is None else a.prefix
-            runthread(p.stdout, prefix)
-            runthread(p.stderr, prefix)
+            tag = '[%d]:'%p.pid if a.tag is None else a.tag
+            runthread(1, p.stdout, tag)
+            runthread(2, p.stderr, tag)
             time.sleep(args.sleep)
 
     if not args.dryrun and len(plist)>0:
