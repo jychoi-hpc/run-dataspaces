@@ -2,13 +2,12 @@ Wrapper command for running staging application
 ===============================================
 
 This is a wrapper command written in Python for running multiple
-applications with Adios staging methods (FlexPath, DATASPACES, DIMES,
-etc). By default, using DATASPACES is assumed. However, it supports
-FlexPath and others.
+applications and monitoring them. Designed for running Adios staging applications in parallel,
+ it is not restricted to use other general cases where one needs to run multiple applications concurrently.
 
 The general form of this comand is as follows:
 ```
-$ stagerun SERVER_COMMAND [ : APPLICATION_COMMAND ] *
+$ stagerun OPTIONS [ : APPLICATION_COMMAND ] *
 ```
 
 More details of options will be printed with `-h` option:
@@ -37,6 +36,7 @@ Example
 
 ```
 $ ./stagerun -s 1 --oe server.log : \
+        -n 1 --oe server.log dataspaces_server -s 1 -c 2 : \
         -n 1 --oe reader.log adios_icee -c -r DATASPACES : \
         -v -n 1 --oe writer.log adios_icee -w DATASPACES  
 ```
@@ -46,7 +46,7 @@ $ ./stagerun -s 1 --oe server.log : \
 Need to use "--mpicmd" option to specify to use "aprun" launcher.
 
 ```
-./stagerun --noserver --mpicmd aprun : \
+./stagerun --mpicmd aprun : \
     -n 4 adios_icee -w FLEXPATH : \
     -n 4 adios_icee -c -r FLEXPATH
 ```
